@@ -1,25 +1,32 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { FC, Suspense } from 'react';
+import { loadQuery, usePreloadedQuery, RelayEnvironmentProvider, PreloadedQuery } from 'react-relay'
+import Environment from './relayEnvironment'
+import tasksQuery, { TasksQuery } from './__generated__/TasksQuery.graphql'
 
-function App() {
+const preloadedQuery = loadQuery<TasksQuery>(
+  Environment,
+  tasksQuery,
+  {},
+)
+
+interface TodosProps {
+  preloadedQuery: PreloadedQuery<TasksQuery>
+}
+
+const Todos: FC<TodosProps> = ({ preloadedQuery }) => {
+  const data = usePreloadedQuery(tasksQuery, preloadedQuery)
+
+  return <ul>{
+    data.tasks.map(task => (<li>{task?.name}</li>))}</ul>
+}
+
+const App: FC = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <RelayEnvironmentProvider environment={Environment}>
+      <Suspense fallback={'Loading...'}>
+        <Todos preloadedQuery={preloadedQuery} />
+      </Suspense>
+    </RelayEnvironmentProvider>
   );
 }
 
